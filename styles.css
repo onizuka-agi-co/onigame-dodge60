@@ -103,6 +103,47 @@ body {
   margin-top: 14px;
 }
 
+.reentry-cue {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  z-index: 3;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(139, 245, 200, 0.72);
+  color: #d7ffef;
+  background: rgba(6, 15, 24, 0.85);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+}
+
+.reentry-cue.active {
+  animation: reentryCuePop 0.95s ease-out forwards;
+}
+
+@keyframes reentryCuePop {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px) scale(0.92);
+  }
+  16% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  82% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px) scale(0.98);
+  }
+}
+
 canvas {
   display: block;
   width: 100%;

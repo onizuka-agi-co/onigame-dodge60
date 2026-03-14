@@ -9,6 +9,7 @@ const resultTitleEl = document.getElementById("result-title");
 const resultCauseEl = document.getElementById("result-cause");
 const resultScoreEl = document.getElementById("result-score");
 const retryHintEl = document.getElementById("retry-hint");
+const reentryCueEl = document.getElementById("reentry-cue");
 const retryBtn = document.getElementById("retry");
 
 const width = canvas.width;
@@ -39,6 +40,7 @@ const state = {
   pointerActive: false,
   dragOffsetX: player.w / 2,
   dragOffsetY: player.h / 2,
+  reentryCueTimer: null,
 };
 
 const keys = new Set();
@@ -49,7 +51,7 @@ window.addEventListener("keydown", (event) => {
   }
 
   if (event.key === " " && !state.running) {
-    resetGame();
+    resetGame(true);
     return;
   }
 
@@ -82,7 +84,7 @@ canvas.addEventListener("pointercancel", () => {
   state.pointerActive = false;
 });
 
-retryBtn.addEventListener("click", resetGame);
+retryBtn.addEventListener("click", () => resetGame(true));
 
 function loadBestScore() {
   try {
@@ -141,7 +143,27 @@ function clampPlayer() {
   player.y = Math.max(0, Math.min(height - player.h, player.y));
 }
 
-function resetGame() {
+function clearReentryCue() {
+  if (state.reentryCueTimer) {
+    window.clearTimeout(state.reentryCueTimer);
+    state.reentryCueTimer = null;
+  }
+  reentryCueEl.classList.add("hidden");
+  reentryCueEl.classList.remove("active");
+  reentryCueEl.textContent = "";
+}
+
+function showReentryCue() {
+  clearReentryCue();
+  reentryCueEl.textContent = "New run started";
+  reentryCueEl.classList.remove("hidden");
+  reentryCueEl.classList.add("active");
+  state.reentryCueTimer = window.setTimeout(() => {
+    clearReentryCue();
+  }, 980);
+}
+
+function resetGame(fromRetry = false) {
   state.timer = 60;
   state.score = 0;
   state.running = true;
@@ -155,6 +177,10 @@ function resetGame() {
   player.x = width / 2;
   player.y = height - 72;
   overlayEl.classList.add("hidden");
+  clearReentryCue();
+  if (fromRetry) {
+    showReentryCue();
+  }
   render();
 }
 
