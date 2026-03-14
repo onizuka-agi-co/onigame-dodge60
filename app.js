@@ -26,6 +26,10 @@ const state = {
   score: 0,
   bestScore: loadBestScore(),
   running: true,
+  pendingResult: false,
+  pendingClear: false,
+  hitFlashTimer: 0,
+  hitFlashDuration: 0.22,
   hazards: [],
   spawnCooldown: 0,
   graceTimer: 1.2,
@@ -139,6 +143,9 @@ function resetGame() {
   state.timer = 60;
   state.score = 0;
   state.running = true;
+  state.pendingResult = false;
+  state.pendingClear = false;
+  state.hitFlashTimer = 0;
   state.hazards = [];
   state.spawnCooldown = 0;
   state.graceTimer = 1.2;
@@ -166,6 +173,13 @@ function intersects(a, b) {
 
 function update(dt) {
   if (!state.running) {
+    if (state.pendingResult) {
+      state.hitFlashTimer = Math.max(0, state.hitFlashTimer - dt);
+      if (state.hitFlashTimer <= 0) {
+        showResult(state.pendingClear);
+        state.pendingResult = false;
+      }
+    }
     return;
   }
 
@@ -220,6 +234,18 @@ function finish(isClear) {
     saveBestScore(finalScore);
   }
 
+  if (!isClear) {
+    state.pendingResult = true;
+    state.pendingClear = false;
+    state.hitFlashTimer = state.hitFlashDuration;
+    return;
+  }
+
+  showResult(true);
+}
+
+function showResult(isClear) {
+  const finalScore = Math.floor(state.score);
   resultTitleEl.textContent = isClear ? "Clear!" : "Game Over";
   resultScoreEl.textContent = `Score: ${finalScore}`;
   overlayEl.classList.remove("hidden");
@@ -275,11 +301,33 @@ function drawReadyBanner() {
   ctx.fillText("READY", width / 2, height * 0.42 + 32);
 }
 
+function drawHitFlash() {
+  if (state.hitFlashTimer <= 0) {
+    return;
+  }
+
+  const ratio = state.hitFlashTimer / state.hitFlashDuration;
+  ctx.fillStyle = `rgba(255, 111, 97, ${0.28 * ratio})`;
+  ctx.fillRect(0, 0, width, height);
+
+  const pulse = 26 + (1 - ratio) * 70;
+  const centerX = player.x + player.w / 2;
+  const centerY = player.y + player.h / 2;
+  const gradient = ctx.createRadialGradient(centerX, centerY, 8, centerX, centerY, pulse);
+  gradient.addColorStop(0, `rgba(255, 255, 255, ${0.72 * ratio})`);
+  gradient.addColorStop(1, "rgba(255, 111, 97, 0)");
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, pulse, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 function render() {
   drawBackground();
   drawPlayer();
   drawHazards();
   drawReadyBanner();
+  drawHitFlash();
 
   timeEl.textContent = state.timer.toFixed(1);
   scoreEl.textContent = Math.floor(state.score).toString();
