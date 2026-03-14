@@ -63,6 +63,9 @@ window.addEventListener("keyup", (event) => {
 });
 
 canvas.addEventListener("pointerdown", (event) => {
+  if (isInputLocked()) {
+    return;
+  }
   state.pointerActive = true;
   canvas.setPointerCapture(event.pointerId);
   beginPointerDrag(event);
@@ -143,6 +146,10 @@ function clampPlayer() {
   player.y = Math.max(0, Math.min(height - player.h, player.y));
 }
 
+function isInputLocked() {
+  return state.running && state.graceTimer > 0;
+}
+
 function clearReentryCue() {
   if (state.reentryCueTimer) {
     window.clearTimeout(state.reentryCueTimer);
@@ -155,7 +162,7 @@ function clearReentryCue() {
 
 function showReentryCue() {
   clearReentryCue();
-  reentryCueEl.textContent = "New run started";
+  reentryCueEl.textContent = "New run started - controls unlock at LIVE";
   reentryCueEl.classList.remove("hidden");
   reentryCueEl.classList.add("active");
   state.reentryCueTimer = window.setTimeout(() => {
@@ -174,6 +181,8 @@ function resetGame(fromRetry = false) {
   state.spawnCooldown = 0;
   state.graceTimer = 1.2;
   state.lastTs = 0;
+  state.pointerActive = false;
+  keys.clear();
   player.x = width / 2;
   player.y = height - 72;
   overlayEl.classList.add("hidden");
@@ -223,7 +232,7 @@ function update(dt) {
   const moveX = (keys.has("arrowright") || keys.has("d") ? 1 : 0) - (keys.has("arrowleft") || keys.has("a") ? 1 : 0);
   const moveY = (keys.has("arrowdown") || keys.has("s") ? 1 : 0) - (keys.has("arrowup") || keys.has("w") ? 1 : 0);
 
-  if (moveX || moveY) {
+  if (state.graceTimer <= 0 && (moveX || moveY)) {
     player.x += moveX * player.speed * dt;
     player.y += moveY * player.speed * dt;
     clampPlayer();
