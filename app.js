@@ -1,0 +1,243 @@
+const canvas = document.getElementById("stage");
+const ctx = canvas.getContext("2d");
+const timeEl = document.getElementById("time");
+const scoreEl = document.getElementById("score");
+const bestEl = document.getElementById("best");
+const overlayEl = document.getElementById("overlay");
+const resultTitleEl = document.getElementById("result-title");
+const resultScoreEl = document.getElementById("result-score");
+const retryBtn = document.getElementById("retry");
+
+const width = canvas.width;
+const height = canvas.height;
+const bestScoreKey = "dodge60-best-score";
+
+const player = {
+  x: width / 2,
+  y: height - 72,
+  w: 24,
+  h: 24,
+  speed: 245,
+};
+
+const state = {
+  timer: 60,
+  score: 0,
+  bestScore: loadBestScore(),
+  running: true,
+  hazards: [],
+  spawnCooldown: 0,
+  lastTs: 0,
+  pointerActive: false,
+};
+
+const keys = new Set();
+
+window.addEventListener("keydown", (event) => {
+  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "a", "s", "d", "W", "A", "S", "D", " "].includes(event.key)) {
+    event.preventDefault();
+  }
+
+  if (event.key === " " && !state.running) {
+    resetGame();
+    return;
+  }
+
+  keys.add(event.key.toLowerCase());
+});
+
+window.addEventListener("keyup", (event) => {
+  keys.delete(event.key.toLowerCase());
+});
+
+canvas.addEventListener("pointerdown", (event) => {
+  state.pointerActive = true;
+  canvas.setPointerCapture(event.pointerId);
+  movePlayerToPointer(event);
+});
+
+canvas.addEventListener("pointermove", (event) => {
+  if (state.pointerActive) {
+    movePlayerToPointer(event);
+  }
+});
+
+canvas.addEventListener("pointerup", (event) => {
+  state.pointerActive = false;
+  canvas.releasePointerCapture(event.pointerId);
+});
+
+canvas.addEventListener("pointercancel", () => {
+  state.pointerActive = false;
+});
+
+retryBtn.addEventListener("click", resetGame);
+
+function loadBestScore() {
+  try {
+    return Number(window.localStorage.getItem(bestScoreKey) || 0);
+  } catch {
+    return 0;
+  }
+}
+
+function saveBestScore(nextBest) {
+  try {
+    window.localStorage.setItem(bestScoreKey, String(nextBest));
+  } catch {
+    // Local play should still work even when storage is unavailable.
+  }
+}
+
+function movePlayerToPointer(event) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = width / rect.width;
+  const scaleY = height / rect.height;
+  player.x = (event.clientX - rect.left) * scaleX - player.w / 2;
+  player.y = (event.clientY - rect.top) * scaleY - player.h / 2;
+  clampPlayer();
+}
+
+function clampPlayer() {
+  player.x = Math.max(0, Math.min(width - player.w, player.x));
+  player.y = Math.max(0, Math.min(height - player.h, player.y));
+}
+
+function resetGame() {
+  state.timer = 60;
+  state.score = 0;
+  state.running = true;
+  state.hazards = [];
+  state.spawnCooldown = 0;
+  state.lastTs = 0;
+  player.x = width / 2;
+  player.y = height - 72;
+  overlayEl.classList.add("hidden");
+  render();
+}
+
+function spawnHazard() {
+  const size = 18 + Math.random() * 24;
+  state.hazards.push({
+    x: Math.random() * (width - size),
+    y: -size,
+    w: size,
+    h: size,
+    speed: 120 + Math.random() * 190,
+  });
+}
+
+function intersects(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+function update(dt) {
+  if (!state.running) {
+    return;
+  }
+
+  state.timer = Math.max(0, state.timer - dt);
+  state.score += dt * 10;
+
+  const moveX = (keys.has("arrowright") || keys.has("d") ? 1 : 0) - (keys.has("arrowleft") || keys.has("a") ? 1 : 0);
+  const moveY = (keys.has("arrowdown") || keys.has("s") ? 1 : 0) - (keys.has("arrowup") || keys.has("w") ? 1 : 0);
+
+  if (moveX || moveY) {
+    player.x += moveX * player.speed * dt;
+    player.y += moveY * player.speed * dt;
+    clampPlayer();
+  }
+
+  state.spawnCooldown -= dt;
+  const progress = 1 - state.timer / 60;
+  if (state.spawnCooldown <= 0) {
+    spawnHazard();
+    state.spawnCooldown = Math.max(0.14, 0.5 - progress * 0.34);
+  }
+
+  const playerHitbox = { x: player.x, y: player.y, w: player.w, h: player.h };
+  for (const hazard of state.hazards) {
+    hazard.y += hazard.speed * dt * (1 + progress * 0.65);
+    if (intersects(playerHitbox, hazard)) {
+      finish(false);
+      return;
+    }
+  }
+
+  state.hazards = state.hazards.filter((hazard) => hazard.y < height + hazard.h);
+
+  if (state.timer <= 0) {
+    finish(true);
+  }
+}
+
+function finish(isClear) {
+  state.running = false;
+  const finalScore = Math.floor(state.score);
+  if (finalScore > state.bestScore) {
+    state.bestScore = finalScore;
+    saveBestScore(finalScore);
+  }
+
+  resultTitleEl.textContent = isClear ? "Clear!" : "Game Over";
+  resultScoreEl.textContent = `Score: ${finalScore}`;
+  overlayEl.classList.remove("hidden");
+}
+
+function drawBackground() {
+  const gradient = ctx.createLinearGradient(0, 0, 0, height);
+  gradient.addColorStop(0, "#08131f");
+  gradient.addColorStop(1, "#102336");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.strokeStyle = "rgba(139, 245, 200, 0.08)";
+  ctx.lineWidth = 1;
+  for (let y = 0; y <= height; y += 40) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+}
+
+function drawPlayer() {
+  ctx.fillStyle = "#8bf5c8";
+  ctx.fillRect(player.x, player.y, player.w, player.h);
+  ctx.strokeStyle = "#f2f7fb";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(player.x, player.y, player.w, player.h);
+}
+
+function drawHazards() {
+  for (const hazard of state.hazards) {
+    ctx.fillStyle = "#ff6f61";
+    ctx.fillRect(hazard.x, hazard.y, hazard.w, hazard.h);
+  }
+}
+
+function render() {
+  drawBackground();
+  drawPlayer();
+  drawHazards();
+
+  timeEl.textContent = state.timer.toFixed(1);
+  scoreEl.textContent = Math.floor(state.score).toString();
+  bestEl.textContent = state.bestScore.toString();
+}
+
+function frame(ts) {
+  if (!state.lastTs) {
+    state.lastTs = ts;
+  }
+
+  const dt = Math.min(0.033, (ts - state.lastTs) / 1000);
+  state.lastTs = ts;
+
+  update(dt);
+  render();
+  requestAnimationFrame(frame);
+}
+
+resetGame();
+requestAnimationFrame(frame);
