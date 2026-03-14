@@ -27,6 +27,7 @@ const state = {
   running: true,
   hazards: [],
   spawnCooldown: 0,
+  graceTimer: 1.2,
   lastTs: 0,
   pointerActive: false,
 };
@@ -109,6 +110,7 @@ function resetGame() {
   state.running = true;
   state.hazards = [];
   state.spawnCooldown = 0;
+  state.graceTimer = 1.2;
   state.lastTs = 0;
   player.x = width / 2;
   player.y = height - 72;
@@ -138,6 +140,7 @@ function update(dt) {
 
   state.timer = Math.max(0, state.timer - dt);
   state.score += dt * 10;
+  state.graceTimer = Math.max(0, state.graceTimer - dt);
 
   const moveX = (keys.has("arrowright") || keys.has("d") ? 1 : 0) - (keys.has("arrowleft") || keys.has("a") ? 1 : 0);
   const moveY = (keys.has("arrowdown") || keys.has("s") ? 1 : 0) - (keys.has("arrowup") || keys.has("w") ? 1 : 0);
@@ -148,17 +151,19 @@ function update(dt) {
     clampPlayer();
   }
 
-  state.spawnCooldown -= dt;
   const progress = 1 - state.timer / 60;
-  if (state.spawnCooldown <= 0) {
-    spawnHazard();
-    state.spawnCooldown = Math.max(0.14, 0.5 - progress * 0.34);
+  if (state.graceTimer <= 0) {
+    state.spawnCooldown -= dt;
+    if (state.spawnCooldown <= 0) {
+      spawnHazard();
+      state.spawnCooldown = Math.max(0.14, 0.5 - progress * 0.34);
+    }
   }
 
   const playerHitbox = { x: player.x, y: player.y, w: player.w, h: player.h };
   for (const hazard of state.hazards) {
     hazard.y += hazard.speed * dt * (1 + progress * 0.65);
-    if (intersects(playerHitbox, hazard)) {
+    if (state.graceTimer <= 0 && intersects(playerHitbox, hazard)) {
       finish(false);
       return;
     }
@@ -216,10 +221,29 @@ function drawHazards() {
   }
 }
 
+function drawReadyBanner() {
+  if (state.graceTimer <= 0 || !state.running) {
+    return;
+  }
+
+  ctx.fillStyle = "rgba(8, 19, 31, 0.68)";
+  ctx.fillRect(36, height * 0.42, width - 72, 64);
+  ctx.strokeStyle = "rgba(139, 245, 200, 0.75)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(36, height * 0.42, width - 72, 64);
+
+  ctx.fillStyle = "#8bf5c8";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "700 22px 'Franklin Gothic Medium', sans-serif";
+  ctx.fillText("READY", width / 2, height * 0.42 + 32);
+}
+
 function render() {
   drawBackground();
   drawPlayer();
   drawHazards();
+  drawReadyBanner();
 
   timeEl.textContent = state.timer.toFixed(1);
   scoreEl.textContent = Math.floor(state.score).toString();
