@@ -67,6 +67,22 @@ body {
   font-size: 0.95rem;
 }
 
+.repo-link-wrap {
+  margin: 8px 0 0;
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+
+.repo-link {
+  color: var(--mint);
+  word-break: break-all;
+}
+
+.repo-link:hover,
+.repo-link:focus-visible {
+  color: #b8ffe2;
+}
+
 .stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

@@ -31,6 +31,8 @@ const state = {
   graceTimer: 1.2,
   lastTs: 0,
   pointerActive: false,
+  dragOffsetX: player.w / 2,
+  dragOffsetY: player.h / 2,
 };
 
 const keys = new Set();
@@ -55,6 +57,7 @@ window.addEventListener("keyup", (event) => {
 canvas.addEventListener("pointerdown", (event) => {
   state.pointerActive = true;
   canvas.setPointerCapture(event.pointerId);
+  beginPointerDrag(event);
   movePlayerToPointer(event);
 });
 
@@ -91,12 +94,39 @@ function saveBestScore(nextBest) {
   }
 }
 
-function movePlayerToPointer(event) {
+function pointerToStage(event) {
   const rect = canvas.getBoundingClientRect();
   const scaleX = width / rect.width;
   const scaleY = height / rect.height;
-  player.x = (event.clientX - rect.left) * scaleX - player.w / 2;
-  player.y = (event.clientY - rect.top) * scaleY - player.h / 2;
+  return {
+    x: (event.clientX - rect.left) * scaleX,
+    y: (event.clientY - rect.top) * scaleY,
+  };
+}
+
+function beginPointerDrag(event) {
+  const stage = pointerToStage(event);
+  const insidePlayer =
+    stage.x >= player.x &&
+    stage.x <= player.x + player.w &&
+    stage.y >= player.y &&
+    stage.y <= player.y + player.h;
+
+  if (insidePlayer) {
+    state.dragOffsetX = stage.x - player.x;
+    state.dragOffsetY = stage.y - player.y;
+    return;
+  }
+
+  // Outside touches use center grab so flick-to-dodge still feels responsive.
+  state.dragOffsetX = player.w / 2;
+  state.dragOffsetY = player.h / 2;
+}
+
+function movePlayerToPointer(event) {
+  const stage = pointerToStage(event);
+  player.x = stage.x - state.dragOffsetX;
+  player.y = stage.y - state.dragOffsetY;
   clampPlayer();
 }
 
