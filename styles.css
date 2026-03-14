@@ -121,6 +121,10 @@ body {
   transform: translateX(-50%);
 }
 
+.reentry-cue.hidden {
+  display: none;
+}
+
 .reentry-cue.active {
   animation: reentryCuePop 0.95s ease-out forwards;
 }
