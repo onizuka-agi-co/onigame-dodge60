@@ -6,6 +6,7 @@ const bestEl = document.getElementById("best");
 const stateEl = document.getElementById("state");
 const overlayEl = document.getElementById("overlay");
 const resultTitleEl = document.getElementById("result-title");
+const resultCauseEl = document.getElementById("result-cause");
 const resultScoreEl = document.getElementById("result-score");
 const retryBtn = document.getElementById("retry");
 
@@ -247,6 +248,8 @@ function finish(isClear) {
 function showResult(isClear) {
   const finalScore = Math.floor(state.score);
   resultTitleEl.textContent = isClear ? "Clear!" : "Game Over";
+  resultCauseEl.className = `result-cause ${isClear ? "clear" : "hit"}`;
+  resultCauseEl.textContent = isClear ? "Reason: Survived 60s" : "Reason: Hit by hazard";
   resultScoreEl.textContent = `Score: ${finalScore}`;
   overlayEl.classList.remove("hidden");
 }

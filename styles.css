@@ -143,6 +143,29 @@ canvas {
   margin: 0;
 }
 
+.result-cause {
+  justify-self: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.result-cause.hit {
+  color: #ffd6d2;
+  border-color: rgba(255, 111, 97, 0.62);
+  background: rgba(255, 111, 97, 0.24);
+}
+
+.result-cause.clear {
+  color: #d8ffef;
+  border-color: rgba(139, 245, 200, 0.62);
+  background: rgba(139, 245, 200, 0.2);
+}
+
 button {
   justify-self: center;
   min-width: 140px;
