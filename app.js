@@ -8,6 +8,7 @@ const overlayEl = document.getElementById("overlay");
 const resultTitleEl = document.getElementById("result-title");
 const resultCauseEl = document.getElementById("result-cause");
 const resultScoreEl = document.getElementById("result-score");
+const retryHintEl = document.getElementById("retry-hint");
 const retryBtn = document.getElementById("retry");
 
 const width = canvas.width;
@@ -250,8 +251,10 @@ function showResult(isClear) {
   resultTitleEl.textContent = isClear ? "Clear!" : "Game Over";
   resultCauseEl.className = `result-cause ${isClear ? "clear" : "hit"}`;
   resultCauseEl.textContent = isClear ? "Reason: Survived 60s" : "Reason: Hit by hazard";
+  retryHintEl.textContent = isClear ? "Play again: Tap Retry or press Space" : "Quick restart: Tap Retry or press Space";
   resultScoreEl.textContent = `Score: ${finalScore}`;
   overlayEl.classList.remove("hidden");
+  requestAnimationFrame(() => retryBtn.focus());
 }
 
 function drawBackground() {
