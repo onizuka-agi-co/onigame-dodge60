@@ -138,9 +138,14 @@ function update(dt) {
     return;
   }
 
-  state.timer = Math.max(0, state.timer - dt);
-  state.score += dt * 10;
+  const wasInGrace = state.graceTimer > 0;
   state.graceTimer = Math.max(0, state.graceTimer - dt);
+
+  // Keep the advertised 60-second run fair by starting timer/score after READY.
+  if (!wasInGrace) {
+    state.timer = Math.max(0, state.timer - dt);
+    state.score += dt * 10;
+  }
 
   const moveX = (keys.has("arrowright") || keys.has("d") ? 1 : 0) - (keys.has("arrowleft") || keys.has("a") ? 1 : 0);
   const moveY = (keys.has("arrowdown") || keys.has("s") ? 1 : 0) - (keys.has("arrowup") || keys.has("w") ? 1 : 0);
