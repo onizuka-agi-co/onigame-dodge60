@@ -3,6 +3,7 @@ const ctx = canvas.getContext("2d");
 const timeEl = document.getElementById("time");
 const scoreEl = document.getElementById("score");
 const bestEl = document.getElementById("best");
+const stateEl = document.getElementById("state");
 const overlayEl = document.getElementById("overlay");
 const resultTitleEl = document.getElementById("result-title");
 const resultScoreEl = document.getElementById("result-score");
@@ -253,6 +254,13 @@ function render() {
   timeEl.textContent = state.timer.toFixed(1);
   scoreEl.textContent = Math.floor(state.score).toString();
   bestEl.textContent = state.bestScore.toString();
+  if (!state.running) {
+    stateEl.textContent = "RESULT";
+  } else if (state.graceTimer > 0) {
+    stateEl.textContent = `READY ${state.graceTimer.toFixed(1)}s`;
+  } else {
+    stateEl.textContent = "LIVE";
+  }
 }
 
 function frame(ts) {
