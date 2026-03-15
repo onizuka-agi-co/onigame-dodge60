@@ -46,6 +46,7 @@ const state = {
   reentryCueTimer: null,
   liveCueTimer: null,
   liveCueAwaitingInput: false,
+  liveCueMinVisibleTimer: 0,
 };
 
 const keys = new Set();
@@ -202,6 +203,7 @@ function clearLiveCue() {
     state.liveCueTimer = null;
   }
   state.liveCueAwaitingInput = false;
+  state.liveCueMinVisibleTimer = 0;
   liveCueEl.classList.add("hidden");
   liveCueEl.classList.remove("active");
   liveCueEl.textContent = "";
@@ -211,6 +213,7 @@ function showLiveCue() {
   clearLiveCue();
   liveCueEl.textContent = "LIVE - move now";
   state.liveCueAwaitingInput = true;
+  state.liveCueMinVisibleTimer = 0.5;
   liveCueEl.classList.remove("hidden");
   liveCueEl.classList.add("active");
   state.liveCueTimer = window.setTimeout(() => {
@@ -287,7 +290,16 @@ function update(dt) {
   const moveX = (keys.has("arrowright") || keys.has("d") ? 1 : 0) - (keys.has("arrowleft") || keys.has("a") ? 1 : 0);
   const moveY = (keys.has("arrowdown") || keys.has("s") ? 1 : 0) - (keys.has("arrowup") || keys.has("w") ? 1 : 0);
 
-  if (state.graceTimer <= 0 && state.liveCueAwaitingInput && (moveX || moveY || state.pointerActive)) {
+  if (state.graceTimer <= 0 && state.liveCueMinVisibleTimer > 0) {
+    state.liveCueMinVisibleTimer = Math.max(0, state.liveCueMinVisibleTimer - dt);
+  }
+
+  if (
+    state.graceTimer <= 0 &&
+    state.liveCueAwaitingInput &&
+    state.liveCueMinVisibleTimer <= 0 &&
+    (moveX || moveY || state.pointerActive)
+  ) {
     clearLiveCue();
   }
 
