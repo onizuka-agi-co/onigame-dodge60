@@ -10,6 +10,7 @@ const resultCauseEl = document.getElementById("result-cause");
 const resultScoreEl = document.getElementById("result-score");
 const retryHintEl = document.getElementById("retry-hint");
 const reentryCueEl = document.getElementById("reentry-cue");
+const liveCueEl = document.getElementById("live-cue");
 const retryBtn = document.getElementById("retry");
 
 const width = canvas.width;
@@ -43,6 +44,7 @@ const state = {
   pointerStageX: null,
   pointerStageY: null,
   reentryCueTimer: null,
+  liveCueTimer: null,
 };
 
 const keys = new Set();
@@ -193,6 +195,26 @@ function showReentryCue() {
   }, cueMs);
 }
 
+function clearLiveCue() {
+  if (state.liveCueTimer) {
+    window.clearTimeout(state.liveCueTimer);
+    state.liveCueTimer = null;
+  }
+  liveCueEl.classList.add("hidden");
+  liveCueEl.classList.remove("active");
+  liveCueEl.textContent = "";
+}
+
+function showLiveCue() {
+  clearLiveCue();
+  liveCueEl.textContent = "LIVE - move now";
+  liveCueEl.classList.remove("hidden");
+  liveCueEl.classList.add("active");
+  state.liveCueTimer = window.setTimeout(() => {
+    clearLiveCue();
+  }, 620);
+}
+
 function resetGame(fromRetry = false) {
   state.timer = 60;
   state.score = 0;
@@ -212,6 +234,7 @@ function resetGame(fromRetry = false) {
   player.y = height - 72;
   overlayEl.classList.add("hidden");
   clearReentryCue();
+  clearLiveCue();
   if (fromRetry) {
     showReentryCue();
   }
@@ -249,6 +272,7 @@ function update(dt) {
   state.graceTimer = Math.max(0, state.graceTimer - dt);
   if (wasInGrace && state.graceTimer <= 0) {
     clearReentryCue();
+    showLiveCue();
   }
 
   // Keep the advertised 60-second run fair by starting timer/score after READY.

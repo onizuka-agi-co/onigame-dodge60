@@ -129,6 +129,32 @@ body {
   animation: reentryCuePop 0.95s ease-out forwards;
 }
 
+ .live-cue {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  z-index: 3;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 179, 102, 0.8);
+  color: #ffe7bf;
+  background: rgba(14, 23, 36, 0.88);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+}
+
+.live-cue.hidden {
+  display: none;
+}
+
+.live-cue.active {
+  animation: liveCueBurst 0.64s ease-out forwards;
+}
+
 @keyframes reentryCuePop {
   0% {
     opacity: 0;
@@ -145,6 +171,25 @@ body {
   100% {
     opacity: 0;
     transform: translateX(-50%) translateY(-8px) scale(0.98);
+  }
+}
+
+@keyframes liveCueBurst {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px) scale(0.92);
+  }
+  20% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  84% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-6px) scale(0.98);
   }
 }
 
