@@ -213,7 +213,7 @@ function showLiveCue() {
   clearLiveCue();
   liveCueEl.textContent = "LIVE - move now";
   state.liveCueAwaitingInput = true;
-  state.liveCueMinVisibleTimer = 0.5;
+  state.liveCueMinVisibleTimer = 0.85;
   liveCueEl.classList.remove("hidden");
   liveCueEl.classList.add("active");
   state.liveCueTimer = window.setTimeout(() => {
