@@ -45,6 +45,7 @@ const state = {
   pointerStageY: null,
   reentryCueTimer: null,
   liveCueTimer: null,
+  liveCueAwaitingInput: false,
 };
 
 const keys = new Set();
@@ -200,6 +201,7 @@ function clearLiveCue() {
     window.clearTimeout(state.liveCueTimer);
     state.liveCueTimer = null;
   }
+  state.liveCueAwaitingInput = false;
   liveCueEl.classList.add("hidden");
   liveCueEl.classList.remove("active");
   liveCueEl.textContent = "";
@@ -208,11 +210,12 @@ function clearLiveCue() {
 function showLiveCue() {
   clearLiveCue();
   liveCueEl.textContent = "LIVE - move now";
+  state.liveCueAwaitingInput = true;
   liveCueEl.classList.remove("hidden");
   liveCueEl.classList.add("active");
   state.liveCueTimer = window.setTimeout(() => {
     clearLiveCue();
-  }, 620);
+  }, 1800);
 }
 
 function resetGame(fromRetry = false) {
@@ -283,6 +286,10 @@ function update(dt) {
 
   const moveX = (keys.has("arrowright") || keys.has("d") ? 1 : 0) - (keys.has("arrowleft") || keys.has("a") ? 1 : 0);
   const moveY = (keys.has("arrowdown") || keys.has("s") ? 1 : 0) - (keys.has("arrowup") || keys.has("w") ? 1 : 0);
+
+  if (state.graceTimer <= 0 && state.liveCueAwaitingInput && (moveX || moveY || state.pointerActive)) {
+    clearLiveCue();
+  }
 
   if (state.graceTimer <= 0 && (moveX || moveY)) {
     player.x += moveX * player.speed * dt;
