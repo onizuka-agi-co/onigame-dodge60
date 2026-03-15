@@ -40,6 +40,8 @@ const state = {
   pointerActive: false,
   dragOffsetX: player.w / 2,
   dragOffsetY: player.h / 2,
+  pointerStageX: null,
+  pointerStageY: null,
   reentryCueTimer: null,
 };
 
@@ -63,9 +65,6 @@ window.addEventListener("keyup", (event) => {
 });
 
 canvas.addEventListener("pointerdown", (event) => {
-  if (isInputLocked()) {
-    return;
-  }
   state.pointerActive = true;
   canvas.setPointerCapture(event.pointerId);
   beginPointerDrag(event);
@@ -80,11 +79,15 @@ canvas.addEventListener("pointermove", (event) => {
 
 canvas.addEventListener("pointerup", (event) => {
   state.pointerActive = false;
+  state.pointerStageX = null;
+  state.pointerStageY = null;
   canvas.releasePointerCapture(event.pointerId);
 });
 
 canvas.addEventListener("pointercancel", () => {
   state.pointerActive = false;
+  state.pointerStageX = null;
+  state.pointerStageY = null;
 });
 
 retryBtn.addEventListener("click", () => resetGame(true));
@@ -115,8 +118,15 @@ function pointerToStage(event) {
   };
 }
 
-function beginPointerDrag(event) {
+function updatePointerStage(event) {
   const stage = pointerToStage(event);
+  state.pointerStageX = stage.x;
+  state.pointerStageY = stage.y;
+  return stage;
+}
+
+function beginPointerDrag(event) {
+  const stage = updatePointerStage(event);
   const insidePlayer =
     stage.x >= player.x &&
     stage.x <= player.x + player.w &&
@@ -135,9 +145,21 @@ function beginPointerDrag(event) {
 }
 
 function movePlayerToPointer(event) {
-  const stage = pointerToStage(event);
+  const stage = updatePointerStage(event);
+  if (isInputLocked()) {
+    return;
+  }
   player.x = stage.x - state.dragOffsetX;
   player.y = stage.y - state.dragOffsetY;
+  clampPlayer();
+}
+
+function applyHeldPointerAfterReady() {
+  if (!state.pointerActive || state.pointerStageX === null || state.pointerStageY === null || isInputLocked()) {
+    return;
+  }
+  player.x = state.pointerStageX - state.dragOffsetX;
+  player.y = state.pointerStageY - state.dragOffsetY;
   clampPlayer();
 }
 
@@ -182,6 +204,8 @@ function resetGame(fromRetry = false) {
   state.graceTimer = 1.2;
   state.lastTs = 0;
   state.pointerActive = false;
+  state.pointerStageX = null;
+  state.pointerStageY = null;
   keys.clear();
   player.x = width / 2;
   player.y = height - 72;
@@ -237,6 +261,8 @@ function update(dt) {
     player.y += moveY * player.speed * dt;
     clampPlayer();
   }
+
+  applyHeldPointerAfterReady();
 
   const progress = 1 - state.timer / 60;
   if (state.graceTimer <= 0) {
