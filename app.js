@@ -187,9 +187,10 @@ function showReentryCue() {
   reentryCueEl.textContent = "New run started - controls unlock at LIVE";
   reentryCueEl.classList.remove("hidden");
   reentryCueEl.classList.add("active");
+  const cueMs = Math.max(980, Math.ceil(state.graceTimer * 1000) + 240);
   state.reentryCueTimer = window.setTimeout(() => {
     clearReentryCue();
-  }, 980);
+  }, cueMs);
 }
 
 function resetGame(fromRetry = false) {
