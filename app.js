@@ -247,6 +247,9 @@ function update(dt) {
 
   const wasInGrace = state.graceTimer > 0;
   state.graceTimer = Math.max(0, state.graceTimer - dt);
+  if (wasInGrace && state.graceTimer <= 0) {
+    clearReentryCue();
+  }
 
   // Keep the advertised 60-second run fair by starting timer/score after READY.
   if (!wasInGrace) {
