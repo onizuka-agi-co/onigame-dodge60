@@ -289,18 +289,11 @@ function update(dt) {
 
   const moveX = (keys.has("arrowright") || keys.has("d") ? 1 : 0) - (keys.has("arrowleft") || keys.has("a") ? 1 : 0);
   const moveY = (keys.has("arrowdown") || keys.has("s") ? 1 : 0) - (keys.has("arrowup") || keys.has("w") ? 1 : 0);
+  const prevPlayerX = player.x;
+  const prevPlayerY = player.y;
 
   if (state.graceTimer <= 0 && state.liveCueMinVisibleTimer > 0) {
     state.liveCueMinVisibleTimer = Math.max(0, state.liveCueMinVisibleTimer - dt);
-  }
-
-  if (
-    state.graceTimer <= 0 &&
-    state.liveCueAwaitingInput &&
-    state.liveCueMinVisibleTimer <= 0 &&
-    (moveX || moveY || state.pointerActive)
-  ) {
-    clearLiveCue();
   }
 
   if (state.graceTimer <= 0 && (moveX || moveY)) {
@@ -310,6 +303,17 @@ function update(dt) {
   }
 
   applyHeldPointerAfterReady();
+  const playerMovedThisFrame =
+    Math.abs(player.x - prevPlayerX) > 0.01 || Math.abs(player.y - prevPlayerY) > 0.01;
+
+  if (
+    state.graceTimer <= 0 &&
+    state.liveCueAwaitingInput &&
+    state.liveCueMinVisibleTimer <= 0 &&
+    playerMovedThisFrame
+  ) {
+    clearLiveCue();
+  }
 
   const progress = 1 - state.timer / 60;
   if (state.graceTimer <= 0) {
