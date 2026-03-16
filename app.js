@@ -48,7 +48,7 @@ const state = {
   liveCueAwaitingInput: false,
   liveCueMinVisibleTimer: 0,
   readyInputHintTimer: 0,
-  firstSpawnDelaySeconds: 0.58,
+  firstSpawnDelaySeconds: 0.92,
 };
 
 const keys = new Set();
