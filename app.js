@@ -48,6 +48,7 @@ const state = {
   liveCueAwaitingInput: false,
   liveCueMinVisibleTimer: 0,
   readyInputHintTimer: 0,
+  firstSpawnDelaySeconds: 0.58,
 };
 
 const keys = new Set();
@@ -280,6 +281,7 @@ function update(dt) {
   if (wasInGrace && state.graceTimer <= 0) {
     clearReentryCue();
     showLiveCue();
+    state.spawnCooldown = state.firstSpawnDelaySeconds;
   }
 
   // Keep the advertised 60-second run fair by starting timer/score after READY.
