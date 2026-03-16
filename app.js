@@ -47,6 +47,7 @@ const state = {
   liveCueTimer: null,
   liveCueAwaitingInput: false,
   liveCueMinVisibleTimer: 0,
+  readyInputHintTimer: 0,
 };
 
 const keys = new Set();
@@ -292,6 +293,13 @@ function update(dt) {
   const prevPlayerX = player.x;
   const prevPlayerY = player.y;
 
+  if (state.readyInputHintTimer > 0) {
+    state.readyInputHintTimer = Math.max(0, state.readyInputHintTimer - dt);
+  }
+  if (state.graceTimer > 0 && (moveX !== 0 || moveY !== 0 || state.pointerActive)) {
+    state.readyInputHintTimer = 0.65;
+  }
+
   if (state.graceTimer <= 0 && state.liveCueMinVisibleTimer > 0) {
     state.liveCueMinVisibleTimer = Math.max(0, state.liveCueMinVisibleTimer - dt);
   }
@@ -453,7 +461,9 @@ function render() {
   if (!state.running) {
     stateEl.textContent = "RESULT";
   } else if (state.graceTimer > 0) {
-    stateEl.textContent = `READY ${state.graceTimer.toFixed(1)}s`;
+    const readyText = `READY ${state.graceTimer.toFixed(1)}s`;
+    stateEl.textContent =
+      state.readyInputHintTimer > 0 ? `${readyText} · input locked until LIVE` : readyText;
   } else {
     stateEl.textContent = "LIVE";
   }
